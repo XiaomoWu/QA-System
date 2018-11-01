@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="qa_io.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="QA_System.py" />
     <Compile Include="test.py">
       <SubType>Code</SubType>
