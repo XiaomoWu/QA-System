@@ -1,15 +1,15 @@
-#import os
-#import re
-#import spacy
-#import pandas as pd
-#from copy import deepcopy
+import os
+import re
+import spacy
+import pandas as pd
+from copy import deepcopy
 
-#nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en_core_web_lg')
 
-##set working directory
-##please change dir_path to where your solution located."""
-#dir_path = 'C:/Users/rossz/OneDrive/Academy/the U/Assignment/AssignmentSln/NLP-04-QA/QA-System/QA-System/'
-#os.chdir(dir_path)
+#set working directory
+#please change dir_path to where your solution located."""
+dir_path = 'C:/Users/rossz/OneDrive/Academy/the U/Assignment/AssignmentSln/NLP-04-QA/QA-System/QA-System/'
+os.chdir(dir_path)
 
 
 def create_input():
@@ -32,13 +32,8 @@ def create_input():
             f.writelines(os.path.splitext(s)[0])
             f.writelines('\n')
 
-    ## print questions
-    #for a in answer_fpath:
-    #    with open(dir_path + 'developset/' + a) as f:
-    #        line = f.readlines()
-    #        print(line)
 
-#create_input()
+create_input()
 
 class QA:
     def __init__(self):
@@ -74,24 +69,16 @@ class QA:
                     print('NO DATE!')
                 m = re.search(r'TEXT:([\s\S]+)', story)
                 if m:
-                    storytxt = m.group(1).strip()
+                    storytxt = nlp(m.group(1).strip())
                 else:
                     print('NO STORY CONTENT!')
 
-                # for each paragraph in a story, create a row
-                storytxt_paragraph_list = storytxt.split('\n\n')
-                i = 0
-                for p in storytxt_paragraph_list:
-                    paragraph = p.strip()
-                    if paragraph != '':
-                        paragraph = nlp(paragraph)
-                        i += 1
-                        stories.append({'story_id': s, 'headline': headline, 'date': date, 'paragraph_id': i, 'paragraph': paragraph})
+                stories.append({'story_id': s, 'headline': headline, 'date': date, 'story': storytxt})
                 
-        df = pd.DataFrame(stories).reindex(['story_id', 'headline', 'date', 'paragraph_id', 'paragraph'], axis = 1)
+        df = pd.DataFrame(stories).reindex(['story_id', 'headline', 'date', 'story'], axis = 1)
         
         # write to disk
-        #df.to_pickle('story_data.pkl')
+        df.to_pickle('story_data.pkl')
 
         return df
 
@@ -134,7 +121,7 @@ class QA:
         df = pd.DataFrame(questions).reindex(['story_id', 'question_id', 'question', 'difficulty', 'answer'], axis = 1)
 
         # write to disk
-        #df.to_pickle('question_and_ans_data.pkl')
+        df.to_pickle('question_and_ans_data.pkl')
         return df
 
     def _extract_answer(self):
@@ -142,7 +129,7 @@ class QA:
             (2) for each story id, extract its question, then look up in story_data, find the best sentence"""
 
         for story_id in self.story_ids:
-            story_para_list = self.story_data.loc[lambda df: df.story_id == story_id, 'paragraph']
+            story = self.story_data.loc[lambda df: df.story_id == story_id, 'story'].values[0]
             question_ids = self.question_and_ans_data.loc[lambda df: df.story_id == story_id, 'question_id']
 
             for question_id in question_ids:
@@ -152,10 +139,9 @@ class QA:
                     answer = self.question_and_ans_data.loc[lambda df: df.question_id == question_id, 'answer'].values[0]
 
                 ans = []
-                for para in story_para_list:
-                    for sent in para.sents:
-                        sim = sent.similarity(question)
-                        ans.append({'question_id': question_id, 'answer_pred': sent, 'similarity': sim})
+                for sent in story.sents:
+                    sim = sent.similarity(question)
+                    ans.append({'question_id': question_id, 'answer_pred': sent, 'similarity': sim})
 
                 ans = pd.DataFrame(ans).reindex(['question_id', 'answer_pred', 'similarity'], axis = 1)
                 ans.sort_values(by = ['similarity'], ascending = False, inplace = True)
@@ -173,6 +159,10 @@ class QA:
             recall = len(_overlap_tokens(row['answer'], row['answer_pred'])) / len(row['answer'])
             return recall
 
+        def _make_overlap(row):
+            overlap = _overlap_tokens(row['answer'], row['answer_pred'])
+            return overlap
+
         def _overlap_tokens(doc, other_doc):
             """Get the tokens from the original Doc that are also in the comparison Doc.
             """
@@ -185,7 +175,7 @@ class QA:
         
         self.question_and_ans_data['precision'] = self.question_and_ans_data.apply(_make_precision, axis = 1)
         self.question_and_ans_data['recall'] = self.question_and_ans_data.apply(_make_recall, axis = 1)
-        #self.question_and_ans_data['f_score'] = 
+        self.question_and_ans_data['overlap'] = self.question_and_ans_data.apply(_make_overlap, axis = 1)
         self.question_and_ans_data = self.question_and_ans_data.assign(f_score = lambda x: (2 * x['precision'] * x['recall']) / (x['precision'] + x['recall']))
 
 qa = QA()
