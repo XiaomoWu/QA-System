@@ -123,7 +123,7 @@ def score(question_and_ans_data):
 
     return question_and_ans_data
 
-def create_input():
+def create_input(dir_path):
     """ create an input file (list file names of stories)
         required by pp. 3 of the instruction"""
 

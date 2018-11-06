@@ -1,3 +1,8 @@
+#set working directory
+#please change dir_path to where your solution located."""
+dir_path = 'C:/Users/rossz/OneDrive/Academy/the U/Assignment/AssignmentSln/NLP-04-QA/QA-System/QA-System/'
+os.chdir(dir_path)
+
 import os
 import re
 import spacy
@@ -7,17 +12,12 @@ import qa_algo
 from copy import deepcopy
 
 
-##set working directory
-##please change dir_path to where your solution located."""
-#dir_path = 'C:/Users/rossz/OneDrive/Academy/the U/Assignment/AssignmentSln/NLP-04-QA/QA-System/QA-System/'
-#os.chdir(dir_path)
-
-#create_input()
-
-
 class QA:
     def __init__(self):
         input_fpath = 'developset/input.txt'
+        if not os.path.exists(input_fpath):
+            qa_io.create_input(dir_path)
+
         self.input_dir, self.story_ids = qa_io.get_story_id_from_input(input_fpath)
 
         # create question and story dataset. Read from disk if they exist else create from scratch.
@@ -36,8 +36,8 @@ class QA:
 qa = QA()
 qa._extract_answer()
 qa._score()
-ans = qa.question_and_ans_data
-ans.to_csv('ans.csv', index = False)
+#ans = qa.question_and_ans_data
+#ans.to_csv('ans.csv', index = False)
 
         
 
