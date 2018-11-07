@@ -2,4 +2,13 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/QA-System/test.py
+# Byte-compiled / optimized / DLL files
+
+
+__pycache__/
+
+*.py[cod]
+*.response
+
+*$py.class
+

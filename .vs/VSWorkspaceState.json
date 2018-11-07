@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\QA-System"
+    "\\QA-System",
+    "\\QA-System\\developset"
   ],
   "SelectedNode": "\\QA-System\\QA_System.py",
   "PreviewInSolutionExplorer": false
