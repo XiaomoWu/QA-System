@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>67b367cf-8258-459e-bd56-8a666d22e817</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>QA_System.py</StartupFile>
+    <StartupFile>qa.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -28,7 +28,7 @@
     <Compile Include="qa_io.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="QA_System.py" />
+    <Compile Include="qa.py" />
     <Compile Include="test.py">
       <SubType>Code</SubType>
     </Compile>

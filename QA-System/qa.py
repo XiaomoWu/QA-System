@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import spacy
 import pandas as pd
@@ -14,9 +15,9 @@ from copy import deepcopy
 #os.chdir(dir_path)
 
 class QA:
-    def __init__(self, similarity_method, model_version, Vocab_Size):
-        input_fpath = 'developset/input.txt'
-        qa_io.create_input()
+    def __init__(self, similarity_method, model_version, Vocab_Size, input_fpath):
+        #input_fpath = 'developset/input.txt'
+        #qa_io.create_input()
         self.input_dir, self.story_ids = qa_io.get_story_id_from_input(input_fpath)
 
         # create question and story dataset.  Read from disk if they exist else
@@ -49,18 +50,21 @@ model_version = 3 # You may ignore this: just used for other dataset and model. 
                   # 1:GloVe 2:fastText 3:Use the training set
 Vocab_Size = 100000 # You may ignore this: just used for other dataset and model.
 similarity_method = 'Spacy' # Put 'Lemma' if you want to run a lemmatized version with no stopwords
-qa = QA(similarity_method, model_version, Vocab_Size)
 
-# Remove Stopwords
-#qa._process_StopWords()
-# Remove Wh- words + How
-qa._extract_answer()
-#qa._score() # As I rely on scoring program, do not need this function
-ans = qa.question_and_ans_data
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    input_fpath = args[0]
+    qa = QA(similarity_method, model_version, Vocab_Size, input_fpath)
 
-# For scoring program
-qa_io.formatting(ans) # Question-id.response
-qa_io.overall_formatting(ans)  # all responses for questions in one file
-qa_io.grab_answers() # grab all answers from the *.answers file and put it in a single file
+    # Remove Stopwords
+    #qa._process_StopWords()
+    # Remove Wh- words + How
+    qa._extract_answer()
+    #qa._score() # As I rely on scoring program, do not need this function
+    ans = qa.question_and_ans_data
 
-#ans.to_csv('ans_'+Sim_Method+'.csv', index = False)
+    # For scoring program
+    #qa_io.formatting(ans) # Question-id.response
+    qa_io.overall_formatting(ans)  # all responses for questions in one file
+    #qa_io.grab_answers() # grab all answers from the *.answers file and put it in a single file
+
