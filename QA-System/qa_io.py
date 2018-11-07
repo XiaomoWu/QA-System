@@ -1,10 +1,10 @@
 import os
 import re
-import spacy
 import pandas as pd
 from copy import deepcopy
+import en_core_web_lg
 
-nlp = spacy.load('en_core_web_lg')
+nlp = en_core_web_lg.load()#spacy.load('en_core_web_lg')
 
 def get_story_id_from_input(input_fpath):
     """function to get story_id from "input.txt"
@@ -23,29 +23,32 @@ def get_story_data(story_ids, input_dir):
         with open('%s%s.story' % (input_dir[1:], s)) as f:
         #with open('developset/1999-W02-5.story') as f:
             story = f.read()
+            
+            story=story
+            
             m = re.search(r'HEADLINE:(.+)\n', story)
             if m: 
                 headline = m.group(1).strip()
             else: 
                 print('NO HEADLINE!')
             m = re.search(r'DATE:(.+)\n', story)
+            
             if m: 
                 date = m.group(1).strip()
             else:
                 print('NO DATE!')
             m = re.search(r'TEXT:([\s\S]+)', story)
+
             if m:
                 storytxt = nlp(m.group(1).strip())
             else:
                 print('NO STORY CONTENT!')
+            stories.append({'story_id': s, 'headline': headline, 'date': date, 'story': storytxt})                
 
-            stories.append({'story_id': s, 'headline': headline, 'date': date, 'story': storytxt})
-                
     df = pd.DataFrame(stories).reindex(['story_id', 'headline', 'date', 'story'], axis = 1)
-        
     # write to disk
-    #df.to_pickle('story_data.pkl')
 
+    #df.to_pickle('story_data.pkl')
     return df
 
 def get_question_and_ans_data(story_ids, input_dir, has_ans = True):
@@ -101,16 +104,16 @@ def score(question_and_ans_data):
     def _make_recall(row):
         recall = len(_overlap_tokens(row['answer'], row['answer_pred'])) / len(row['answer'])
         return recall
-
     def _make_overlap(row):
         overlap = _overlap_tokens(row['answer'], row['answer_pred'])
         return overlap
-
     def _overlap_tokens(doc, other_doc):
         """Get the tokens from the original Doc that are also in the comparison Doc.
         """
         overlap = []
-        other_tokens = [token.text for token in other_doc]
+        if type(other_doc)==float:
+            return overlap
+        other_tokens = [token.text for token in nlp(other_doc.strip())]
         for token in doc:
             if token.text in other_tokens:
                 overlap.append(token)
@@ -120,27 +123,73 @@ def score(question_and_ans_data):
     question_and_ans_data['recall'] = question_and_ans_data.apply(_make_recall, axis = 1)
     question_and_ans_data['overlap'] = question_and_ans_data.apply(_make_overlap, axis = 1)
     question_and_ans_data = question_and_ans_data.assign(f_score = lambda x: (2 * x['precision'] * x['recall']) / (x['precision'] + x['recall']))
-
     return question_and_ans_data
 
-def create_input(dir_path):
-    """ create an input file (list file names of stories)
-        required by pp. 3 of the instruction"""
 
-    fpath = os.listdir(dir_path + 'developset')
+
+def create_input():
+    """ create an input file (list file names of stories)
+        required by pp. 3 of the instruction
+        """
+
+    fpath = os.listdir('developset')
+
 
     # list the file path of all answers and questions
-    story_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.story']
-    story_fpath.sort()
-    answer_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.answers']
-    answer_fpath.sort()
-    question_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.questions']
-    question_fpath.sort()
 
+    story_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.story']
+
+    story_fpath.sort()
+
+    answer_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.answers']
+
+    answer_fpath.sort()
+
+    question_fpath = [f for f in fpath if os.path.splitext(f)[1] == '.questions']
+
+    question_fpath.sort()
     with open('developset/input.txt', 'w') as f:
+
         f.writelines('/developset/\n')
+
         for s in story_fpath:
+
             f.writelines(os.path.splitext(s)[0])
+
             f.writelines('\n')
+
+# Question-id.response file is generated (for the scoring program Ellen gave us)
+def formatting(df):
+   for story_id in set(df['story_id']):
+       with open(os.getcwd()+'\\developset\\'+str(story_id)+'.response','w') as f:
+           for num in df[df['story_id']==story_id].index:
+               f.write('QuestionID: '+str(df[df['story_id']==story_id].loc[num,'question_id']).strip().replace('\r','').replace('\n',' '))
+               f.write('\n')
+               f.write('Answer: '+str(df[df['story_id']==story_id].loc[num,'answer_pred']).strip().replace('\r','').replace('\n',' '))
+               f.write('\n')
+               f.write('\n')
+
+# all responses for questions in one file
+def overall_formatting(df):
+    with open(os.getcwd() + '/developset/current.response','w') as f:
+        for i in range(df.shape[0]):
+            f.write('QuestionID: '+str(df.loc[i,'question_id']).strip().replace('\r','').replace('\n',' '))
+            f.write('\n')
+            f.write('Answer: '+str(df.loc[i,'answer_pred']).strip().replace('\r','').replace('\n',' '))
+            f.write('\n\n')
+
+# grab all answers from the *.answers file and put it in a single file
+def grab_answers():
+    with open(os.getcwd()+'\\developset\\'+'input.txt','r') as input:
+        q=input.readlines()
+
+    Total_list=[]
+    for id in q[1:]:        
+        with open(os.getcwd()+'\\developset\\'+id.replace('\n','')+'.answers','r') as f:
+            Total_list.extend(f.readlines())
+
+    with open(os.getcwd() + '/developset/perfect.answers','w') as writer:
+        for data in Total_list:
+            writer.write(data)
 
 
