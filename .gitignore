@@ -6,9 +6,12 @@
 
 
 __pycache__/
+.vs/
 
 *.py[cod]
 *.response
 
 *$py.class
+
+input.txt
 
