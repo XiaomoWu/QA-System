@@ -176,12 +176,6 @@ def overall_formatting(df):
         print('QuestionID: '+str(df.loc[i,'question_id']).strip().replace('\r','').replace('\n',' '))
         print('Answer: '+str(df.loc[i,'answer_pred']).strip().replace('\r','').replace('\n',' ') + '\n')
 
-    #with open(os.getcwd() + '/current.response','w') as f:
-    #    for i in range(df.shape[0]):
-    #        f.write('QuestionID: '+str(df.loc[i,'question_id']).strip().replace('\r','').replace('\n',' '))
-    #        f.write('\n')
-    #        f.write('Answer: '+str(df.loc[i,'answer_pred']).strip().replace('\r','').replace('\n',' '))
-    #        f.write('\n\n')
 
 
 # grab all answers from the *.answers file and put it in a single file

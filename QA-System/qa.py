@@ -8,6 +8,7 @@ import qa_io
 from copy import deepcopy
 
 
+
 ##set working directory
 ##please change dir_path to where your solution located."""
 #dir_path = 'C:/Users/rossz/OneDrive/Academy/the
@@ -30,8 +31,10 @@ class QA:
             
     # produce answer
     def _extract_answer(self):
-        if self.similarity_method == 'Spacy':
+        if self.similarity_method == 'spacy':
             self.question_and_ans_data = qa_algo.extract_answer(self.story_data, self.question_and_ans_data, self.story_ids, only_np = False)
+        elif self.similarity_method == 'spacy_qtype':
+            self.question_and_ans_data = qa_algo.extract_answer_qtype(self.story_data, self.question_and_ans_data, self.story_ids)
         elif self.similarity_method == 'Jaccard':
             self.question_and_ans_data = qa_algo.extract_answer_JACCARD(self.story_data, self.question_and_ans_data, self.story_ids)
         elif self.similarity_method == 'Manhattan':
@@ -49,7 +52,7 @@ class QA:
 model_version = 3 # You may ignore this: just used for other dataset and model.  Database
                   # 1:GloVe 2:fastText 3:Use the training set
 Vocab_Size = 100000 # You may ignore this: just used for other dataset and model.
-similarity_method = 'Spacy' # Put 'Lemma' if you want to run a lemmatized version with no stopwords
+similarity_method = 'spacy_qtype' # Put 'Lemma' if you want to run a lemmatized version with no stopwords
 
 if __name__ == '__main__':
     args = sys.argv[1:]

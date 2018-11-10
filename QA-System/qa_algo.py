@@ -46,6 +46,61 @@ def extract_answer(story_data, question_and_ans_data, story_ids, only_np = False
 
     return question_and_ans_data
 
+# Spacy + question type
+def extract_answer_qtype(story_data, question_and_ans_data, story_ids, only_np = False):
+    """ (1) get answer, then modify self.question_and_ans_data by add the answer to it. 
+        (2) for each story id, extract its question, then look up in story_data, find the best sentence"""
+
+    for story_id in story_ids:
+        story = story_data.loc[lambda df: df.story_id == story_id, 'story'].values[0]
+        question_ids = question_and_ans_data.loc[lambda df: df.story_id == story_id, 'question_id']
+        
+
+        for question_id in question_ids:
+            # get the question
+            question = question_and_ans_data.loc[lambda df: df.question_id == question_id, 'question'].values[0]
+            questiontxt = [t.text.lower() for t in question]
+            # get answer
+            if 'answer' in question_and_ans_data:
+                answer = question_and_ans_data.loc[lambda df: df.question_id == question_id, 'answer'].values[0]
+
+            # classify questions
+            question_type = ''
+            if 'when' in questiontxt[0:1]:
+                question_type = 'datetime'
+            if 'who' in questiontxt[0:1]:
+                question_type = 'person'
+            if 'where' in questiontxt[0:1]:
+                question_type = 'loc'
+
+
+            ans = []
+            
+            for sent in story.sents:         
+                sim=sent.similarity(question)
+
+                if only_np == True:
+                    sent = nlp(' '.join([n.text for n in sent.noun_chunks]))
+                if question_type == 'datetime':
+                    sent = nlp(' '.join([ent.text for ent in sent.ents if ent.label_ in ['DATE', 'TIME']]))
+                elif question_type == 'person':
+                    sent = nlp(' '.join([ent.text for ent in sent.ents if ent.label_ in ['PERSON', 'NORP', 'ORG']]))
+                elif question_type == 'loc':
+                    sent = nlp(' '.join([ent.text for ent in sent.ents if ent.label_ in ['LOC', 'GPE', 'FAC']]))
+
+
+                ans.append({'question_id': question_id, 'answer_pred': sent, 'similarity': sim})
+
+            ans = pd.DataFrame(ans).reindex(['question_id', 'answer_pred', 'similarity'], axis = 1)
+            ans.sort_values(by = ['similarity'], ascending = False, inplace = True)
+
+            question_and_ans_data.loc[lambda df: df.question_id == question_id, 'answer_pred'] = ans.iloc[0]['answer_pred'].text
+
+    question_and_ans_data['answer_pred'] = question_and_ans_data['answer_pred'].apply(nlp)
+
+    return question_and_ans_data
+
+
 # JACCARD
 def extract_answer_JACCARD(story_data, question_and_ans_data, story_ids):
     """ (1) get answer, then modify self.question_and_ans_data by add the answer to it. 
